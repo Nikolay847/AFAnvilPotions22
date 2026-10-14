@@ -46,8 +46,8 @@ public final class Listeners implements Listener {
         PotionType rightType = rightMeta.getBasePotionType();
         if (leftType == null || rightType == null || leftType != rightType) return;
 
-        boolean upgraded = leftType.isUpgrade();
-        if (upgraded != rightType.isUpgrade()) return;
+        boolean upgraded = isUpgradePotion(leftType);
+        if (upgraded != isUpgradePotion(rightType)) return;
 
         boolean levelThree = upgraded;
         if (levelThree && !ConfigManager.enabledLevel3) return;
@@ -68,6 +68,14 @@ public final class Listeners implements Listener {
         int pricePerPotion = Math.max(0, potions.getInt(effectName + ".exp-price", 0));
         long totalCost = (long) pricePerPotion * amount;
         inv.setRepairCost((int) Math.min(Integer.MAX_VALUE, totalCost));
+    }
+
+    /**
+     * Bukkit/Paper 1.21.4 PotionType does not expose isUpgrade().
+     * Strong vanilla potion variants are represented by STRONG_* enum constants.
+     */
+    private boolean isUpgradePotion(PotionType type) {
+        return type.name().startsWith("STRONG_");
     }
 
     private boolean validPair(ItemStack left, ItemStack right) {
@@ -213,7 +221,7 @@ public final class Listeners implements Listener {
         if (left == null || !(left.getItemMeta() instanceof PotionMeta)) return false;
         PotionType type = ((PotionMeta) left.getItemMeta()).getBasePotionType();
         if (type == null) return false;
-        boolean levelThree = type.isUpgrade();
+        boolean levelThree = isUpgradePotion(type);
         if (levelThree) {
             return !ConfigManager.checkPermissionLevel3 || player.hasPermission("afanvilpotions.upgrade.level.3");
         }
